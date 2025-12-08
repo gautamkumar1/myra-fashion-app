@@ -1,14 +1,31 @@
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuthStore } from '@/store/authStore';
 
 export default function WarehouseScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('test@example.com');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const { loginWarehouse, isLoading, error, setError } = useAuthStore();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+
+    try {
+      setError(null);
+      await loginWarehouse(email, password);
+      router.replace('/warehouse-dashboard');
+    } catch (err) {
+      // Error is already set in the store
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#1a1f3a]">
@@ -76,9 +93,26 @@ export default function WarehouseScreen() {
               </View>
             </View>
 
+            {/* Error Message */}
+            {error && (
+              <View className="mb-4 bg-red-500/20 border border-red-500/50 rounded-xl p-3">
+                <Text className="text-red-400 text-sm text-center">{error}</Text>
+              </View>
+            )}
+
             {/* Sign In Button */}
-            <Pressable className="bg-[#f97316] rounded-xl py-4 mt-2">
-              <Text className="text-white text-lg font-bold text-center">Sign In</Text>
+            <Pressable
+              className={`rounded-xl py-4 mt-2 ${isLoading ? 'bg-[#f97316]/50' : 'bg-[#f97316]'}`}
+              onPress={handleLogin}
+              disabled={isLoading}>
+              {isLoading ? (
+                <View className="flex-row items-center justify-center">
+                  <ActivityIndicator size="small" color="#ffffff" />
+                  <Text className="text-white text-lg font-bold ml-2">Signing In...</Text>
+                </View>
+              ) : (
+                <Text className="text-white text-lg font-bold text-center">Sign In</Text>
+              )}
             </Pressable>
           </View>
         </View>
