@@ -1,14 +1,26 @@
 import 'dotenv/config';
 import express from 'express';
 import connectDB from './utils/db.js';
+import seedAdmin from './utils/seedAdmin.js';
+import adminRoutes from './routes/adminRoutes.js';
+import salesmanRoutes from './routes/salesmanRoutes.js';
+
 const port = process.env.PORT || 3000;
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
   res.send('Hello World');
 });
 
-connectDB().then(() => {
+app.use('/admin', adminRoutes);
+app.use('/salesman', salesmanRoutes);
+
+connectDB().then(async () => {
+  // await seedAdmin(); // close for now becuase currently we already have an admin
+  
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
