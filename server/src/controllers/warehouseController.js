@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import Warehouse from '../models/warehouseModel.js';
+import generateToken from '../utils/generateToken.js';
 
 export const warehouseLogin = async (req, res) => {
     try {
@@ -30,9 +31,12 @@ export const warehouseLogin = async (req, res) => {
         });
       }
   
+      const token = generateToken(warehouse.id, 'warehouse');
+  
       res.status(200).json({
         success: true,
         message: 'Warehouse login successful',
+        token,
         warehouse: {
           id: warehouse.id,
           name: warehouse.name,
@@ -47,3 +51,10 @@ export const warehouseLogin = async (req, res) => {
       });
     }
   };
+
+export const warehouseLogout = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Logout successful'
+  });
+};
