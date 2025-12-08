@@ -5,10 +5,16 @@ import seedAdmin from './utils/seedAdmin.js';
 import adminRoutes from './routes/adminRoutes.js';
 import salesmanRoutes from './routes/salesmanRoutes.js';
 import warehouseRoutes from './routes/warehouseRoutes.js';
-
+import cors from 'cors';
 const port = process.env.PORT || 3000;
 const app = express();
 
+app.use(cors({
+  origin: 'http://localhost:8081',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],  
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
