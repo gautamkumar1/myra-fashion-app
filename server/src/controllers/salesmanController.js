@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import Salesman from '../models/salesmanModel.js';
+import generateToken from '../utils/generateToken.js';
 
 export const salesmanLogin = async (req, res) => {
   try {
@@ -30,9 +31,12 @@ export const salesmanLogin = async (req, res) => {
       });
     }
 
+    const token = generateToken(user.id, 'salesman');
+
     res.status(200).json({
       success: true,
       message: 'User login successful',
+      token,
       user: {
         id: user.id,
         name: user.name,
@@ -46,5 +50,12 @@ export const salesmanLogin = async (req, res) => {
       message: 'Internal server error'
     });
   }
+};
+
+export const salesmanLogout = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Logout successful'
+  });
 };
 
