@@ -14,6 +14,10 @@ export interface LoginResponse {
     name: string;
     email: string;
   };
+  admin?: {
+    id: string;
+    email: string;
+  };
 }
 
 export interface ApiError {
@@ -126,5 +130,34 @@ export async function logoutSalesman(): Promise<{ success: true; message: string
 export async function logoutWarehouse(): Promise<{ success: true; message: string }> {
   return apiRequest<{ success: true; message: string }>('/warehouse/logout', {
     method: 'POST',
+  });
+}
+
+export async function loginAdmin(
+  email: string,
+  password: string
+): Promise<LoginResponse> {
+  return apiRequest<LoginResponse>('/admin/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export interface DashboardStats {
+  success: boolean;
+  stats: {
+    products: number;
+    salesmen: number;
+    warehouseStaff: number;
+    pendingOrders: number;
+  };
+}
+
+export async function getDashboardStats(token: string): Promise<DashboardStats> {
+  return apiRequest<DashboardStats>('/admin/dashboard/stats', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 }

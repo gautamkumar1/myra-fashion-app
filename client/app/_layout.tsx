@@ -20,10 +20,12 @@ export default function RootLayout() {
         <Stack.Screen name="salesman" options={{ headerShown: false }} />
         <Stack.Screen name="warehouse" options={{ headerShown: false }} />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
+        <Stack.Screen name="admin-dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="salesman-dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="warehouse-dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(salesman-tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(admin-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="product-details" options={{ presentation: 'modal', headerShown: false }} />
       </Stack>

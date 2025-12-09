@@ -1,14 +1,33 @@
-import { View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuthStore } from '@/store/authStore';
 
 export default function AdminScreen() {
   const router = useRouter();
+  const { loginAdmin, isLoading, error } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      setLocalError('Please enter both email and password');
+      return;
+    }
+
+    try {
+      setLocalError(null);
+      await loginAdmin(email.trim(), password);
+      router.replace('/(admin-tabs)');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      setLocalError(errorMessage);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-[#1a1f3a]">
@@ -76,9 +95,23 @@ export default function AdminScreen() {
               </View>
             </View>
 
+            {/* Error Message */}
+            {(localError || error) && (
+              <View className="mb-4 bg-red-500/20 border border-red-500/50 rounded-xl p-3">
+                <Text className="text-red-400 text-sm text-center">
+                  {localError || error}
+                </Text>
+              </View>
+            )}
+
             {/* Sign In Button */}
-            <Pressable className="bg-[#22c55e] rounded-xl py-4 mt-2">
-              <Text className="text-white text-lg font-bold text-center">Sign In</Text>
+            <Pressable
+              className={`bg-[#22c55e] rounded-xl py-4 mt-2 ${isLoading ? 'opacity-50' : ''}`}
+              onPress={handleLogin}
+              disabled={isLoading}>
+              <Text className="text-white text-lg font-bold text-center">
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </Text>
             </Pressable>
           </View>
         </View>
