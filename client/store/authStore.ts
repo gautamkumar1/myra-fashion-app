@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   loginSalesman,
   loginWarehouse,
+  loginAdmin,
   logoutSalesman,
   logoutWarehouse,
   type LoginResponse,
@@ -14,7 +15,7 @@ interface User {
   email: string;
 }
 
-type Role = 'salesman' | 'warehouse' | null;
+type Role = 'salesman' | 'warehouse' | 'admin' | null;
 
 interface AuthState {
   user: User | null;
@@ -25,6 +26,7 @@ interface AuthState {
   error: string | null;
   loginSalesman: (email: string, password: string) => Promise<void>;
   loginWarehouse: (email: string, password: string) => Promise<void>;
+  loginAdmin: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -121,6 +123,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  loginAdmin: async (email: string, password: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response: LoginResponse = await loginAdmin(email, password);
+
+      if (response.success && response.token && response.admin) {
+        const user: User = {
+          id: response.admin.id,
+          name: 'Admin',
+          email: response.admin.email,
+        };
+        const token = response.token;
+        const role: Role = 'admin';
+
+        await AsyncStorage.setItem(TOKEN_KEY, token);
+        await AsyncStorage.setItem(ROLE_KEY, role);
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+
+        set({
+          user,
+          role,
+          token,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Login failed';
+      set({
+        isLoading: false,
+        error: errorMessage,
+        isAuthenticated: false,
+      });
+      throw error;
+    }
+  },
+
   logout: async () => {
     try {
       const { role } = get();
@@ -131,6 +174,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else if (role === 'warehouse') {
         await logoutWarehouse();
       }
+      // Admin logout doesn't require API call, just clear local storage
 
       await AsyncStorage.multiRemove([TOKEN_KEY, ROLE_KEY, USER_KEY]);
 
