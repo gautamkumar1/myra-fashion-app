@@ -15,7 +15,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 app.use(cors({
   origin: isDevelopment ? true : 'http://localhost:8081', // Allow all origins in dev, specific in prod
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],  
 }));
 app.use(express.json());
