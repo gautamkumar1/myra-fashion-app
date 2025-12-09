@@ -115,16 +115,16 @@ export default function SalesmanHomeScreen() {
               </Text>
             </View>
             <View className="flex-row gap-3">
-              <Pressable className="w-10 h-10 bg-[#2d324a] rounded-full items-center justify-center">
+              <Pressable className="w-10 h-10 bg-[#2d324a] rounded-lg items-center justify-center">
                 <Ionicons name="cart-outline" size={20} color="#ffffff" />
               </Pressable>
-              <Pressable className="w-10 h-10 bg-[#2d324a] rounded-full items-center justify-center">
+              <Pressable className="w-10 h-10 bg-[#2d324a] rounded-lg items-center justify-center">
                 <Ionicons name="notifications-outline" size={20} color="#ffffff" />
               </Pressable>
               <Pressable
                 onPress={handleLogout}
                 disabled={isLoading}
-                className="w-10 h-10 bg-[#2d324a] rounded-full items-center justify-center">
+                className="w-10 h-10 bg-[#2d324a] rounded-lg items-center justify-center">
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (

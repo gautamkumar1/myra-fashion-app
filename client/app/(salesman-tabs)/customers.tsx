@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 
-export default function CartScreen() {
+export default function CustomersScreen() {
   const router = useRouter();
   const { user, logout, isLoading } = useAuthStore();
 
@@ -46,12 +46,18 @@ export default function CartScreen() {
           </View>
 
           <View className="items-center justify-center flex-1">
-            <View className="w-20 h-20 bg-purple-500/20 rounded-2xl items-center justify-center mb-6">
-              <Ionicons name="cart" size={48} color="#a78bfa" />
+            <View className="w-20 h-20 bg-green-500/20 rounded-2xl items-center justify-center mb-6">
+              <Ionicons name="people" size={48} color="#34d399" />
             </View>
-            <Text className="text-white text-2xl font-bold mb-2">Shopping Cart</Text>
-            <Text className="text-gray-400 text-base text-center">
-              Your cart items will appear here
+            <Text className="text-white text-2xl font-bold mb-2">Customers</Text>
+            {user && (
+              <View className="items-center mt-4">
+                <Text className="text-gray-400 text-base mb-1">{user.name}</Text>
+                <Text className="text-gray-500 text-sm">{user.email}</Text>
+              </View>
+            )}
+            <Text className="text-gray-400 text-base text-center mt-4">
+              Manage your customers
             </Text>
           </View>
         </View>
