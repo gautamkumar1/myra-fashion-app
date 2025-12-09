@@ -43,29 +43,29 @@ export default function SalesmanTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="orders"
+        name="products"
         options={{
-          title: 'Orders',
+          title: 'Products',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cube-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="orders"
         options={{
-          title: 'History',
+          title: 'Orders',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="time-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="customers"
         options={{
-          title: 'Profile',
+          title: 'Customers',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
       />
