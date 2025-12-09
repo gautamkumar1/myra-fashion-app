@@ -21,7 +21,7 @@ export default function SalesmanScreen() {
     try {
       setError(null);
       await loginSalesman(email, password);
-      router.replace('/salesman-dashboard');
+      router.replace('/(salesman-tabs)');
     } catch (err) {
       // Error is already set in the store
     }
