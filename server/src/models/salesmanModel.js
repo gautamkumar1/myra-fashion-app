@@ -25,6 +25,20 @@ const salesmanSchema = new mongoose.Schema({
     required: [true, 'Branch is required'],
     default: "Myra Fashion LLC"
   },
+  phone: {
+    type: String,
+    trim: true
+  },
+  region: {
+    type: String,
+    enum: ["North", "South", "East", "West"],
+    trim: true
+  },
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active"
+  },
   plainPassword: {
     type: String,
     required: [true, 'Plain password is required']

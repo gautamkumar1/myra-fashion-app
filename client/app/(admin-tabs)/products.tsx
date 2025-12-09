@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getProducts, deleteProduct, type Product } from '@/utils/api';
 import ProductCard from '@/components/product-card';
 import ProductFormModal from '@/components/product-form-modal';
+import AdminHeader from '@/components/admin-header';
 
 const CATEGORIES = ['All', 'Mysore Silks', 'Lucknowi Threads', 'Manish Collections'];
 
@@ -146,8 +147,9 @@ export default function AdminProductsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#1a1f3a]">
-      {/* Header */}
-      <View className="px-6 pt-6 pb-4 flex-row items-center justify-between">
+      <AdminHeader />
+      {/* Page Header */}
+      <View className="px-6 pb-4 flex-row items-center justify-between">
         <Text className="text-white text-2xl font-bold">Products</Text>
         <Pressable
           onPress={handleAddProduct}

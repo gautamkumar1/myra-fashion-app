@@ -67,7 +67,7 @@ export const adminLogin = async (req, res) => {
 
 export const createSalesman = async (req, res) => {
   try {
-    const { name, email,branch,plainPassword } = req.body;
+    const { name, email, branch, phone, region, plainPassword } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({
@@ -104,8 +104,11 @@ export const createSalesman = async (req, res) => {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      plainPassword:randomPassword,
-      branch: branch,
+      plainPassword: randomPassword,
+      branch: branch || 'Myra Fashion LLC',
+      phone: phone ? phone.trim() : undefined,
+      region: region || undefined,
+      status: 'active',
     });
 
     await user.save();
@@ -118,6 +121,9 @@ export const createSalesman = async (req, res) => {
         name: user.name,
         email: user.email,
         branch: user.branch,
+        phone: user.phone,
+        region: user.region,
+        status: user.status,
         password: randomPassword,
         createdAt: user.createdAt
       }
@@ -141,7 +147,7 @@ export const createSalesman = async (req, res) => {
 
 export const createWarehouse = async (req, res) => {
   try {
-    const { name, email,branch,plainPassword } = req.body;
+    const { name, email, branch, phone, shift, warehouse, plainPassword } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({
@@ -178,8 +184,12 @@ export const createWarehouse = async (req, res) => {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      plainPassword:randomPassword,
-      branch: branch,
+      plainPassword: randomPassword,
+      branch: branch || 'Myra Fashion LLC',
+      phone: phone ? phone.trim() : undefined,
+      shift: shift || undefined,
+      warehouse: warehouse || undefined,
+      status: 'active',
     });
 
     await user.save();
@@ -192,6 +202,10 @@ export const createWarehouse = async (req, res) => {
         name: user.name,
         email: user.email,
         branch: user.branch,
+        phone: user.phone,
+        shift: user.shift,
+        warehouse: user.warehouse,
+        status: user.status,
         password: randomPassword,
         createdAt: user.createdAt
       }
@@ -659,6 +673,339 @@ export const getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Get dashboard stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const getSalesmen = async (req, res) => {
+  try {
+    const salesmen = await Salesman.find().sort({ createdAt: -1 }).select('-password -plainPassword');
+
+    res.status(200).json({
+      success: true,
+      message: 'Salesmen retrieved successfully',
+      salesmen: salesmen,
+      count: salesmen.length,
+    });
+  } catch (error) {
+    console.error('Get salesmen error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const getSalesmanDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const salesman = await Salesman.findById(id).select('-password');
+
+    if (!salesman) {
+      return res.status(404).json({
+        success: false,
+        message: 'Salesman not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Salesman details retrieved successfully',
+      salesman: {
+        _id: salesman._id,
+        id: salesman.id,
+        name: salesman.name,
+        email: salesman.email,
+        branch: salesman.branch,
+        phone: salesman.phone,
+        region: salesman.region,
+        status: salesman.status,
+        plainPassword: salesman.plainPassword,
+        createdAt: salesman.createdAt,
+        updatedAt: salesman.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Get salesman details error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const updateSalesman = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, branch, phone, region, status } = req.body;
+
+    const salesman = await Salesman.findById(id);
+
+    if (!salesman) {
+      return res.status(404).json({
+        success: false,
+        message: 'Salesman not found',
+      });
+    }
+
+    // Check if email is being changed and if it already exists
+    if (email && email.toLowerCase().trim() !== salesman.email) {
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide a valid email address',
+        });
+      }
+
+      const existingUser = await Salesman.findOne({
+        email: email.toLowerCase(),
+        _id: { $ne: id },
+      });
+
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          message: 'User with this email already exists',
+        });
+      }
+    }
+
+    // Update fields
+    if (name !== undefined) salesman.name = name.trim();
+    if (email !== undefined) salesman.email = email.toLowerCase().trim();
+    if (branch !== undefined) salesman.branch = branch;
+    if (phone !== undefined) salesman.phone = phone ? phone.trim() : undefined;
+    if (region !== undefined) salesman.region = region || undefined;
+    if (status !== undefined) salesman.status = status;
+
+    await salesman.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Salesman updated successfully',
+      salesman: {
+        id: salesman.id,
+        name: salesman.name,
+        email: salesman.email,
+        branch: salesman.branch,
+        phone: salesman.phone,
+        region: salesman.region,
+        status: salesman.status,
+        createdAt: salesman.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error('Update salesman error:', error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: 'User with this email already exists',
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const deleteSalesman = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const salesman = await Salesman.findById(id);
+
+    if (!salesman) {
+      return res.status(404).json({
+        success: false,
+        message: 'Salesman not found',
+      });
+    }
+
+    await Salesman.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Salesman deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete salesman error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const getWarehouseStaff = async (req, res) => {
+  try {
+    const warehouseStaff = await Warehouse.find().sort({ createdAt: -1 }).select('-password -plainPassword');
+
+    res.status(200).json({
+      success: true,
+      message: 'Warehouse staff retrieved successfully',
+      warehouseStaff: warehouseStaff,
+      count: warehouseStaff.length,
+    });
+  } catch (error) {
+    console.error('Get warehouse staff error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const getWarehouseStaffDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const warehouseStaff = await Warehouse.findById(id).select('-password');
+
+    if (!warehouseStaff) {
+      return res.status(404).json({
+        success: false,
+        message: 'Warehouse staff not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Warehouse staff details retrieved successfully',
+      warehouseStaff: {
+        _id: warehouseStaff._id,
+        id: warehouseStaff.id,
+        name: warehouseStaff.name,
+        email: warehouseStaff.email,
+        branch: warehouseStaff.branch,
+        phone: warehouseStaff.phone,
+        shift: warehouseStaff.shift,
+        warehouse: warehouseStaff.warehouse,
+        status: warehouseStaff.status,
+        plainPassword: warehouseStaff.plainPassword,
+        createdAt: warehouseStaff.createdAt,
+        updatedAt: warehouseStaff.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Get warehouse staff details error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const updateWarehouseStaff = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, branch, phone, shift, warehouse, status } = req.body;
+
+    const warehouseStaff = await Warehouse.findById(id);
+
+    if (!warehouseStaff) {
+      return res.status(404).json({
+        success: false,
+        message: 'Warehouse staff not found',
+      });
+    }
+
+    // Check if email is being changed and if it already exists
+    if (email && email.toLowerCase().trim() !== warehouseStaff.email) {
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide a valid email address',
+        });
+      }
+
+      const existingUser = await Warehouse.findOne({
+        email: email.toLowerCase(),
+        _id: { $ne: id },
+      });
+
+      if (existingUser) {
+        return res.status(409).json({
+          success: false,
+          message: 'User with this email already exists',
+        });
+      }
+    }
+
+    // Update fields
+    if (name !== undefined) warehouseStaff.name = name.trim();
+    if (email !== undefined) warehouseStaff.email = email.toLowerCase().trim();
+    if (branch !== undefined) warehouseStaff.branch = branch;
+    if (phone !== undefined) warehouseStaff.phone = phone ? phone.trim() : undefined;
+    if (shift !== undefined) warehouseStaff.shift = shift || undefined;
+    if (warehouse !== undefined) warehouseStaff.warehouse = warehouse || undefined;
+    if (status !== undefined) warehouseStaff.status = status;
+
+    await warehouseStaff.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Warehouse staff updated successfully',
+      warehouseStaff: {
+        _id: warehouseStaff._id,
+        id: warehouseStaff.id,
+        name: warehouseStaff.name,
+        email: warehouseStaff.email,
+        branch: warehouseStaff.branch,
+        phone: warehouseStaff.phone,
+        shift: warehouseStaff.shift,
+        warehouse: warehouseStaff.warehouse,
+        status: warehouseStaff.status,
+        createdAt: warehouseStaff.createdAt,
+        updatedAt: warehouseStaff.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Update warehouse staff error:', error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: 'User with this email already exists',
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const deleteWarehouseStaff = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const warehouseStaff = await Warehouse.findById(id);
+
+    if (!warehouseStaff) {
+      return res.status(404).json({
+        success: false,
+        message: 'Warehouse staff not found',
+      });
+    }
+
+    await Warehouse.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Warehouse staff deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete warehouse staff error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',

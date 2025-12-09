@@ -541,3 +541,285 @@ export async function deleteProduct(
     throw error;
   }
 }
+
+// Salesman interfaces and API functions
+export interface Salesman {
+  _id: string;
+  id: number;
+  name: string;
+  email: string;
+  branch: string;
+  phone?: string;
+  region?: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface SalesmanDetails extends Salesman {
+  plainPassword: string;
+}
+
+export interface GetSalesmenResponse {
+  success: boolean;
+  message: string;
+  salesmen: Salesman[];
+  count: number;
+}
+
+export interface CreateSalesmanResponse {
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    branch: string;
+    phone?: string;
+    region?: string;
+    status: string;
+    password: string;
+    createdAt: string;
+  };
+}
+
+export interface UpdateSalesmanResponse {
+  success: boolean;
+  message: string;
+  salesman: Salesman;
+}
+
+export interface DeleteSalesmanResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface CreateSalesmanData {
+  name: string;
+  email: string;
+  branch: string;
+  phone?: string;
+  region?: string;
+}
+
+export interface UpdateSalesmanData {
+  name?: string;
+  email?: string;
+  branch?: string;
+  phone?: string;
+  region?: string;
+  status?: 'active' | 'inactive';
+}
+
+export async function getSalesmen(token: string): Promise<GetSalesmenResponse> {
+  return apiRequest<GetSalesmenResponse>('/admin/salesmen', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createSalesman(
+  data: CreateSalesmanData,
+  token: string
+): Promise<CreateSalesmanResponse> {
+  return apiRequest<CreateSalesmanResponse>('/admin/create-salesman', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateSalesman(
+  salesmanId: string,
+  data: UpdateSalesmanData,
+  token: string
+): Promise<UpdateSalesmanResponse> {
+  return apiRequest<UpdateSalesmanResponse>(`/admin/salesmen/${salesmanId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteSalesman(
+  salesmanId: string,
+  token: string
+): Promise<DeleteSalesmanResponse> {
+  return apiRequest<DeleteSalesmanResponse>(`/admin/salesmen/${salesmanId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export interface GetSalesmanDetailsResponse {
+  success: boolean;
+  message: string;
+  salesman: SalesmanDetails;
+}
+
+export async function getSalesmanDetails(
+  salesmanId: string,
+  token: string
+): Promise<GetSalesmanDetailsResponse> {
+  return apiRequest<GetSalesmanDetailsResponse>(`/admin/salesmen/${salesmanId}/details`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+// Warehouse Staff interfaces and API functions
+export interface WarehouseStaff {
+  _id: string;
+  id: number;
+  name: string;
+  email: string;
+  branch: string;
+  phone?: string;
+  shift?: string;
+  warehouse?: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface WarehouseStaffDetails extends WarehouseStaff {
+  plainPassword: string;
+}
+
+export interface GetWarehouseStaffResponse {
+  success: boolean;
+  message: string;
+  warehouseStaff: WarehouseStaff[];
+  count: number;
+}
+
+export interface CreateWarehouseStaffResponse {
+  success: boolean;
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    branch: string;
+    phone?: string;
+    shift?: string;
+    warehouse?: string;
+    status: string;
+    password: string;
+    createdAt: string;
+  };
+}
+
+export interface UpdateWarehouseStaffResponse {
+  success: boolean;
+  message: string;
+  warehouseStaff: WarehouseStaff;
+}
+
+export interface DeleteWarehouseStaffResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface CreateWarehouseStaffData {
+  name: string;
+  email: string;
+  branch: string;
+  phone?: string;
+  shift?: string;
+  warehouse?: string;
+}
+
+export interface UpdateWarehouseStaffData {
+  name?: string;
+  email?: string;
+  branch?: string;
+  phone?: string;
+  shift?: string;
+  warehouse?: string;
+  status?: 'active' | 'inactive';
+}
+
+export interface GetWarehouseStaffDetailsResponse {
+  success: boolean;
+  message: string;
+  warehouseStaff: WarehouseStaffDetails;
+}
+
+export async function getWarehouseStaff(token: string): Promise<GetWarehouseStaffResponse> {
+  return apiRequest<GetWarehouseStaffResponse>('/admin/warehouse-staff', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createWarehouseStaff(
+  data: CreateWarehouseStaffData,
+  token: string
+): Promise<CreateWarehouseStaffResponse> {
+  return apiRequest<CreateWarehouseStaffResponse>('/admin/create-warehouse', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateWarehouseStaff(
+  warehouseStaffId: string,
+  data: UpdateWarehouseStaffData,
+  token: string
+): Promise<UpdateWarehouseStaffResponse> {
+  return apiRequest<UpdateWarehouseStaffResponse>(`/admin/warehouse-staff/${warehouseStaffId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteWarehouseStaff(
+  warehouseStaffId: string,
+  token: string
+): Promise<DeleteWarehouseStaffResponse> {
+  console.log('deleteWarehouseStaff API called:', { warehouseStaffId, endpoint: `/admin/warehouse-staff/${warehouseStaffId}` });
+  try {
+    const result = await apiRequest<DeleteWarehouseStaffResponse>(`/admin/warehouse-staff/${warehouseStaffId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log('deleteWarehouseStaff API success:', result);
+    return result;
+  } catch (error) {
+    console.error('deleteWarehouseStaff API error:', error);
+    throw error;
+  }
+}
+
+export async function getWarehouseStaffDetails(
+  warehouseStaffId: string,
+  token: string
+): Promise<GetWarehouseStaffDetailsResponse> {
+  return apiRequest<GetWarehouseStaffDetailsResponse>(`/admin/warehouse-staff/${warehouseStaffId}/details`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
