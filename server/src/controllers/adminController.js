@@ -8,6 +8,13 @@ import generateRandomPassword from '../utils/passwordGenerator.js';
 import generateToken from '../utils/generateToken.js';
 import cloudinary from '../utils/cloudinary.js';
 
+// Verify Cloudinary configuration
+console.log('Cloudinary config check:', {
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'Set' : 'Missing',
+  api_key: process.env.CLOUDINARY_API_KEY ? 'Set' : 'Missing',
+  api_secret: process.env.CLOUDINARY_API_SECRET ? 'Set' : 'Missing',
+});
+
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -209,25 +216,67 @@ export const createWarehouse = async (req, res) => {
 // Helper function to upload image to Cloudinary from buffer
 const uploadImageToCloudinary = (buffer) => {
   return new Promise((resolve, reject) => {
+    if (!buffer || !Buffer.isBuffer(buffer)) {
+      reject(new Error('Invalid buffer provided'));
+      return;
+    }
+
+    if (buffer.length === 0) {
+      reject(new Error('Empty buffer provided'));
+      return;
+    }
+
+    console.log('Uploading to Cloudinary, buffer size:', buffer.length, 'bytes');
+
+    // Use upload_stream method (recommended for buffers)
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: 'image',
-        folder: 'myra-fashion/products', // Optional: organize images in folders
+        folder: 'myra-fashion/products',
       },
       (error, result) => {
         if (error) {
+          console.error('Cloudinary upload error details:', {
+            message: error.message,
+            http_code: error.http_code,
+            name: error.name,
+          });
           reject(error);
+        } else if (!result) {
+          console.error('Cloudinary upload returned no result');
+          reject(new Error('Upload failed: No result returned from Cloudinary'));
+        } else if (!result.secure_url) {
+          console.error('Cloudinary upload result missing secure_url. Full result:', JSON.stringify(result, null, 2));
+          reject(new Error('Upload failed: secure_url not found in result'));
         } else {
+          console.log('Cloudinary upload successful. URL:', result.secure_url);
           resolve(result.secure_url);
         }
       }
     );
 
-    // Convert buffer to stream
-    const readableStream = new Readable();
-    readableStream.push(buffer);
-    readableStream.push(null);
-    readableStream.pipe(uploadStream);
+    // Handle stream errors
+    uploadStream.on('error', (error) => {
+      console.error('Upload stream error:', error);
+      reject(error);
+    });
+
+    // Convert buffer to stream and pipe to upload stream
+    try {
+      const readableStream = new Readable();
+      readableStream.push(buffer);
+      readableStream.push(null);
+      
+      readableStream.on('error', (error) => {
+        console.error('Readable stream error:', error);
+        reject(error);
+      });
+
+      readableStream.pipe(uploadStream);
+    } catch (streamError) {
+      console.error('Error creating readable stream:', streamError);
+      reject(streamError);
+    }
   });
 };
 
@@ -244,13 +293,15 @@ export const createProduct = async (req, res) => {
       size,
       others,
       status,
+      price,
+      stock,
     } = req.body;
 
     // Validate required fields
-    if (!brand || !modelNumber || !productName) {
+    if (!brand || !modelNumber || !productName || price === undefined || stock === undefined) {
       return res.status(400).json({
         success: false,
-        message: 'Brand, model number, and product name are required',
+        message: 'Brand, model number, product name, price, and stock are required',
       });
     }
 
@@ -266,21 +317,53 @@ export const createProduct = async (req, res) => {
       });
     }
 
-    // Upload images to Cloudinary if provided
+    // Upload image to Cloudinary if provided
     const photos = [];
-    if (req.files && req.files.length > 0) {
+    
+    // Check for file from multer first
+    if (req.file) {
+      console.log('File received from multer:', {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        bufferLength: req.file.buffer ? req.file.buffer.length : 0,
+      });
+      
       try {
-        for (const file of req.files) {
-          const imageUrl = await uploadImageToCloudinary(file.buffer);
-          photos.push({ url: imageUrl });
-        }
+        const imageUrl = await uploadImageToCloudinary(req.file.buffer);
+        console.log('Image uploaded successfully, URL:', imageUrl);
+        photos.push({ url: imageUrl });
       } catch (uploadError) {
         console.error('Cloudinary upload error:', uploadError);
         return res.status(500).json({
           success: false,
-          message: 'Failed to upload images to Cloudinary',
+          message: `Failed to upload image to Cloudinary: ${uploadError.message || 'Unknown error'}`,
         });
       }
+    } 
+    // Fallback: Check for base64 image (React Native FormData workaround)
+    else if (req.body.photoBase64) {
+      console.log('Base64 image received, converting to buffer...');
+      try {
+        // Convert base64 to buffer
+        const base64Data = req.body.photoBase64.replace(/^data:image\/\w+;base64,/, '');
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        
+        console.log('Base64 converted to buffer, size:', imageBuffer.length, 'bytes');
+        
+        const imageUrl = await uploadImageToCloudinary(imageBuffer);
+        console.log('Image uploaded successfully from base64, URL:', imageUrl);
+        photos.push({ url: imageUrl });
+      } catch (uploadError) {
+        console.error('Cloudinary upload error from base64:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: `Failed to upload image to Cloudinary: ${uploadError.message || 'Unknown error'}`,
+        });
+      }
+    } else {
+      console.log('No file or base64 image received in request');
     }
 
     // Parse others if it's a string
@@ -308,6 +391,8 @@ export const createProduct = async (req, res) => {
         others: Object.keys(parsedOthers).length > 0 ? parsedOthers : undefined,
       },
       status: status || 'active',
+      price: parseFloat(price),
+      stock: parseInt(stock, 10),
     });
 
     await product.save();
@@ -348,6 +433,8 @@ export const editProduct = async (req, res) => {
       size,
       others,
       status,
+      price,
+      stock,
     } = req.body;
 
     // Find product by ID
@@ -375,21 +462,53 @@ export const editProduct = async (req, res) => {
       }
     }
 
-    // Upload new images to Cloudinary if provided
+    // Upload new image to Cloudinary if provided
     const newPhotos = [];
-    if (req.files && req.files.length > 0) {
+    
+    // Check for file from multer first
+    if (req.file) {
+      console.log('File received for edit from multer:', {
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        bufferLength: req.file.buffer ? req.file.buffer.length : 0,
+      });
+      
       try {
-        for (const file of req.files) {
-          const imageUrl = await uploadImageToCloudinary(file.buffer);
-          newPhotos.push({ url: imageUrl });
-        }
+        const imageUrl = await uploadImageToCloudinary(req.file.buffer);
+        console.log('Image uploaded successfully for edit, URL:', imageUrl);
+        newPhotos.push({ url: imageUrl });
       } catch (uploadError) {
         console.error('Cloudinary upload error:', uploadError);
         return res.status(500).json({
           success: false,
-          message: 'Failed to upload images to Cloudinary',
+          message: `Failed to upload image to Cloudinary: ${uploadError.message || 'Unknown error'}`,
         });
       }
+    }
+    // Fallback: Check for base64 image (React Native FormData workaround)
+    else if (req.body.photoBase64) {
+      console.log('Base64 image received for edit, converting to buffer...');
+      try {
+        // Convert base64 to buffer
+        const base64Data = req.body.photoBase64.replace(/^data:image\/\w+;base64,/, '');
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        
+        console.log('Base64 converted to buffer for edit, size:', imageBuffer.length, 'bytes');
+        
+        const imageUrl = await uploadImageToCloudinary(imageBuffer);
+        console.log('Image uploaded successfully for edit from base64, URL:', imageUrl);
+        newPhotos.push({ url: imageUrl });
+      } catch (uploadError) {
+        console.error('Cloudinary upload error from base64:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: `Failed to upload image to Cloudinary: ${uploadError.message || 'Unknown error'}`,
+        });
+      }
+    } else {
+      console.log('No file or base64 image received in edit request');
     }
 
     // Update product fields (partial update)
@@ -402,6 +521,8 @@ export const editProduct = async (req, res) => {
     if (category !== undefined)
       product.category = category ? category.trim() : undefined;
     if (status !== undefined) product.status = status;
+    if (price !== undefined) product.price = parseFloat(price);
+    if (stock !== undefined) product.stock = parseInt(stock, 10);
 
     // Update attributes
     if (color !== undefined)
@@ -417,7 +538,7 @@ export const editProduct = async (req, res) => {
       }
     }
 
-    // Handle photos: if new photos provided, replace existing ones
+    // Handle photo: if new photo provided, replace existing ones
     // Otherwise, keep existing photos
     if (newPhotos.length > 0) {
       product.photos = newPhotos;
@@ -477,6 +598,34 @@ export const getProducts = async (req, res) => {
     });
   } catch (error) {
     console.error('Get products error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found',
+      });
+    }
+
+    await Product.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Product deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete product error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
