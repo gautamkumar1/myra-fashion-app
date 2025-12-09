@@ -8,6 +8,14 @@ import {
   deleteProduct,
   getProducts,
   getDashboardStats,
+  getSalesmen,
+  getSalesmanDetails,
+  updateSalesman,
+  deleteSalesman,
+  getWarehouseStaff,
+  getWarehouseStaffDetails,
+  updateWarehouseStaff,
+  deleteWarehouseStaff,
 } from '../controllers/adminController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { authorize } from '../middleware/roleMiddleware.js';
@@ -21,6 +29,18 @@ router.post('/login', adminLogin);
 // Protected routes - require authentication and admin role
 router.post('/create-salesman', authenticate, authorize(['admin']), createSalesman);
 router.post('/create-warehouse', authenticate, authorize(['admin']), createWarehouse);
+
+// Salesmen routes
+router.get('/salesmen', authenticate, authorize(['admin']), getSalesmen);
+router.get('/salesmen/:id/details', authenticate, authorize(['admin']), getSalesmanDetails);
+router.patch('/salesmen/:id', authenticate, authorize(['admin']), updateSalesman);
+router.delete('/salesmen/:id', authenticate, authorize(['admin']), deleteSalesman);
+
+// Warehouse staff routes
+router.get('/warehouse-staff', authenticate, authorize(['admin']), getWarehouseStaff);
+router.get('/warehouse-staff/:id/details', authenticate, authorize(['admin']), getWarehouseStaffDetails);
+router.patch('/warehouse-staff/:id', authenticate, authorize(['admin']), updateWarehouseStaff);
+router.delete('/warehouse-staff/:id', authenticate, authorize(['admin']), deleteWarehouseStaff);
 
 // Middleware to log file upload info
 const logFileUpload = (req, res, next) => {

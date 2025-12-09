@@ -25,6 +25,25 @@ const warehouseSchema = new mongoose.Schema({
     required: [true, 'Branch is required'],
     default: "Myra Fashion LLC"
   },
+  phone: {
+    type: String,
+    trim: true
+  },
+  shift: {
+    type: String,
+    enum: ["Morning", "Evening", "Night"],
+    trim: true
+  },
+  warehouse: {
+    type: String,
+    enum: ["WH-001 (Main)", "WH-002 (West)"],
+    trim: true
+  },
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active"
+  },
   plainPassword: {
     type: String,
     required: [true, 'Plain password is required']

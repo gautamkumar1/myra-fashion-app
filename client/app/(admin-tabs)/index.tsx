@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { getDashboardStats, type DashboardStats } from '@/utils/api';
+import AdminHeader from '@/components/admin-header';
 
 interface DashboardCardProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -54,7 +55,7 @@ function QuickAction({ icon, iconColor, iconBgColor, title, subtitle, onPress }:
 
 export default function AdminHomeScreen() {
   const router = useRouter();
-  const { logout, user, token } = useAuthStore();
+  const { token } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats['stats'] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -96,11 +97,6 @@ export default function AdminHomeScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/role-selection');
-  };
-
   const handleAddProduct = () => {
     router.push('/(admin-tabs)/products');
   };
@@ -116,31 +112,7 @@ export default function AdminHomeScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#1a1f3a]">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Header Section */}
-        <View className="px-6 pt-6 pb-4">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center flex-1">
-              <View className="w-12 h-12 bg-teal-500/20 rounded-xl items-center justify-center mr-4">
-                <Ionicons name="settings" size={24} color="#14b8a6" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-white text-2xl font-bold">Admin Panel</Text>
-                <Text className="text-gray-400 text-sm">Myra & Sameera Fashions</Text>
-              </View>
-            </View>
-            <View className="flex-row items-center gap-4">
-              <Pressable className="relative">
-                <Ionicons name="notifications-outline" size={24} color="#ffffff" />
-                <View className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full items-center justify-center">
-                  <Text className="text-white text-xs font-bold">5</Text>
-                </View>
-              </Pressable>
-              <Pressable onPress={handleLogout}>
-                <Ionicons name="exit-outline" size={24} color="#ffffff" />
-              </Pressable>
-            </View>
-          </View>
-        </View>
+        <AdminHeader />
 
         {/* Dashboard Cards */}
         <View className="px-6 mb-6">
