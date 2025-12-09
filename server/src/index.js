@@ -9,8 +9,11 @@ import cors from 'cors';
 const port = process.env.PORT || 3000;
 const app = express();
 
+// CORS configuration: allow all origins in development, specific origins in production
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 app.use(cors({
-  origin: 'http://localhost:8081',
+  origin: isDevelopment ? true : 'http://localhost:8081', // Allow all origins in dev, specific in prod
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],  
